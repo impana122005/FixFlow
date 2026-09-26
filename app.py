@@ -1,6 +1,6 @@
 """
 FixFlow – AI Bug-to-Fix Assistant
-Streamlit home page (Milestone 5 – bug report generator + .txt error log support).
+Streamlit home page (Milestone 7 – login gate + PDF download restore).
 """
 
 import os
@@ -10,15 +10,19 @@ import streamlit as st
 
 from analyzer.parser import analyze_log, parse_uploaded_file
 from analyzer.repo_context import analyze_repo_context
+from auth import init_auth, is_authenticated, render_auth_page
 from reports.report_generator import build_report_data, generate_pdf
 
-# ── Page config ───────────────────────────────────────────────────────────────
+# ── Page config (MUST be the first Streamlit call) ────────────────────────────
 st.set_page_config(
     page_title="FixFlow – AI Bug-to-Fix Assistant",
     page_icon="🔧",
     layout="centered",
     initial_sidebar_state="auto",
 )
+
+# ── Bootstrap auth state ──────────────────────────────────────────────────────
+init_auth()
 
 # ── Theme & global styles ─────────────────────────────────────────────────────
 st.markdown(
@@ -446,6 +450,24 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
+
+# ── Auth gate ─────────────────────────────────────────────────────────────────
+if not is_authenticated():
+    render_auth_page()
+    st.stop()
+
+# ── Logout button (top-right, subtle) ─────────────────────────────────────────
+with st.container():
+    _, logout_col = st.columns([6, 1])
+    with logout_col:
+        if st.button("Logout", key="btn_logout"):
+            st.session_state["ff_authenticated"] = False
+            st.session_state["ff_current_user"]  = ""
+            st.session_state["ff_auth_view"]      = "login"
+            # Clear any stale PDF state so it doesn't bleed into the next session
+            st.session_state.pop("pdf_ready", None)
+            st.session_state.pop("pdf_bytes", None)
+            st.rerun()
 
 # ── Header ────────────────────────────────────────────────────────────────────
 st.markdown('<span class="ff-badge">IBM Bob 2.0 Hackathon</span>', unsafe_allow_html=True)
