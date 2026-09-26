@@ -1,6 +1,6 @@
 """
 FixFlow – AI Bug-to-Fix Assistant
-Streamlit home page (Milestone 4 – repository context mode).
+Streamlit home page (Milestone 5 – bug report generator + .txt error log support).
 """
 
 import os
@@ -10,6 +10,7 @@ import streamlit as st
 
 from analyzer.parser import analyze_log, parse_uploaded_file
 from analyzer.repo_context import analyze_repo_context
+from reports.report_generator import build_report_data, generate_pdf
 
 # ── Page config ──────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -97,6 +98,7 @@ uploaded_file = st.file_uploader(
     type=["txt"],
     accept_multiple_files=False,
     help="Select a plain-text Python error log from your machine.",
+    key="error_log_uploader",
 )
 
 # ── Paste / text area ─────────────────────────────────────────────────────────
@@ -120,6 +122,7 @@ repo_py_files = st.file_uploader(
     type=["py"],
     accept_multiple_files=True,
     help="Select all .py files from your project. Hold Ctrl/Cmd to multi-select.",
+    key="repo_py_uploader",
 )
 
 local_repo_path = st.text_input(
@@ -134,9 +137,11 @@ st.markdown('<hr class="divider">', unsafe_allow_html=True)
 
 # ── Analysis ──────────────────────────────────────────────────────────────────
 if analyze_clicked:
-    # Determine input source — file takes priority over text area
+    # Initialise all values so PDF builder always has valid references
     log_text = ""
     source_label = ""
+    results = []
+    context_matches: list = []
 
     if uploaded_file is not None:
         log_text = parse_uploaded_file(uploaded_file.read())
@@ -327,9 +332,32 @@ if analyze_clicked:
 
                     st.markdown("&nbsp;", unsafe_allow_html=True)
 
+        # ── Generate and store PDF in session state ────────────────────────
+        # results and context_matches are always [] or populated lists at this point
+        report_data = build_report_data(
+            log_text=log_text,
+            results=results,
+            context_matches=context_matches,
+        )
+        st.session_state["pdf_bytes"] = generate_pdf(report_data)
+        st.session_state["pdf_ready"] = True
+
+# ── Download Bug Report button ────────────────────────────────────────────────
+if st.session_state.get("pdf_ready") and st.session_state.get("pdf_bytes"):
+    st.markdown('<hr class="divider">', unsafe_allow_html=True)
+    st.markdown("### 📥 Download Bug Report")
+    st.caption("A professional PDF report summarising the analysis above.")
+    st.download_button(
+        label="⬇️ Download Bug Report (.pdf)",
+        data=st.session_state["pdf_bytes"],
+        file_name="fixflow_bug_report.pdf",
+        mime="application/pdf",
+        use_container_width=True,
+    )
+
 # ── Footer ────────────────────────────────────────────────────────────────────
 st.markdown('<hr class="divider">', unsafe_allow_html=True)
 st.caption(
-    "FixFlow v0.4 · Built with ❤️ for IBM Bob 2.0 Hackathon · "
+    "FixFlow v0.5 · Built with ❤️ for IBM Bob 2.0 Hackathon · "
     "Powered by [IBM Bob](https://www.ibm.com)"
 )

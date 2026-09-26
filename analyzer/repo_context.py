@@ -120,14 +120,14 @@ def build_file_index(files: dict[str, str]) -> dict[str, ProjectFile]:
     """
     Build a lookup index from filename → ProjectFile.
 
+    Keys are lowercased basenames to enable case-insensitive matching.
     *files* is a mapping of {full_path_or_name: source_text}.
-    When the same basename appears multiple times, the last entry wins
-    (callers should deduplicate if needed).
+    When the same basename appears multiple times, the last entry wins.
     """
     index: dict[str, ProjectFile] = {}
     for path, source in files.items():
         fname = _basename(path) if "/" in path or "\\" in path else path
-        index[fname] = ProjectFile(filename=fname, full_path=path, source=source)
+        index[fname.lower()] = ProjectFile(filename=fname, full_path=path, source=source)
     return index
 
 
@@ -218,8 +218,9 @@ def match_context(
         if _is_stdlib_path(frame.raw_path):
             continue
 
+        # Case-insensitive exact match first (index keys are lowercased), then stem match
         proj_file = (
-            file_index.get(frame.filename)
+            file_index.get(frame.filename.lower())
             or _stem_match(frame.filename, file_index)
         )
 
@@ -276,10 +277,10 @@ def _stem_match(
     target_filename: str,
     file_index: dict[str, ProjectFile],
 ) -> ProjectFile | None:
-    """Match by stem (filename without extension) when exact match fails."""
+    """Match by stem when exact match fails. Index keys are already lowercased."""
     target_stem = PurePosixPath(target_filename).stem.lower()
-    for fname, proj_file in file_index.items():
-        if PurePosixPath(fname).stem.lower() == target_stem:
+    for key, proj_file in file_index.items():
+        if PurePosixPath(key).stem == target_stem:
             return proj_file
     return None
 
