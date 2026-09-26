@@ -49,21 +49,26 @@ Debugging is the most time-consuming part of software development. Developers of
 
 > **Replace the placeholder paths below with real screenshots once the app is running.**
 
+### Login page
+![Login Page](assets/screenshots/01_login.png)
+
+---
+
 ### Home Page
 
-![Home Page](assets/screenshots/01_home.png)
+![Home Page](assets/screenshots/02_home.png)
 
 ---
 
 ### Analysis Results — Error Card
 
-![Error Card](assets/screenshots/02_error_card.png)
+![Error Card](assets/screenshots/03_error_card.png)
 
 ---
 
 ### Repository Context Match
 
-![Repository Context](assets/screenshots/03_repo_context.png)
+![Repository Context](assets/screenshots/04_repo_context.png)
 
 ---
 
