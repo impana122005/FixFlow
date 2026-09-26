@@ -223,10 +223,10 @@ The `get_advice()` function in `analyzer/advice.py` is intentionally the **singl
 
 ## 👥 Team
 
-| Member | Role |
+| Member | 
 |---|---|
-| **Impana** | Full-stack development, UI/UX, PDF generation, IBM Bob integration |
-| **[Team Member 2]** | *(Update with your teammate's name and role)* |
+| **Impana** | 
+| **Harshitha G** | 
 
 > Built with ❤️ at the **IBM Bob 2.0 Hackathon**.
 
