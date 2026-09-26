@@ -2,11 +2,11 @@
 
 This file provides guidance to agents when working with code in this repository.
 
-## Architectural Constraints (Non-Obvious)
+## Non-Obvious Architectural Constraints
 
-- **Project is empty** — no coupling, no modules, no DB schema yet. Architecture is greenfield.
-- `.gitignore` reveals planned infrastructure: Redis (cache/broker), Celery (task queue), RabbitMQ or ActiveMQ (message broker). Plan for async from the start if these are needed.
-- Both Streamlit and Flask/Django are gitignored — choose one UI framework and commit to it; mixing them is a smell.
-- `uv` is the implied package manager; plan `pyproject.toml` as the single source of truth for deps, scripts, and tool config (`[tool.ruff]`, `[tool.mypy]`, `[tool.pytest.ini_options]`).
-- Hackathon context: IBM Bob 2.0 — the AI assistant platform may provide tools/APIs; plan integration points accordingly.
-- Secrets architecture: `.env` for local, `.streamlit/secrets.toml` for Streamlit deploy — plan for both from day one.
+- **`app.py` is monolithic by design** — all UI, state management, and layout live in one file. This is intentional for a hackathon single-page app. Do not split into pages or add a `pages/` directory unless there is a strong feature reason.
+- **`analyzer/` → pure functions only**: The entire `analyzer/` layer is stateless. Streamlit session state is managed exclusively in `app.py`. This boundary must not be crossed.
+- **AI integration seam**: `analyzer/fixer.py` + `get_advice()` in `analyzer/advice.py` are the two IBM Bob API integration points. Both are currently stubs. Any planning for AI features must route through these; do not add new Streamlit-level AI calls.
+- **PDF generation is synchronous and blocking** — `generate_pdf()` runs on the main thread. If logs become large, this will block Streamlit's event loop. Plan for offloading only if log sizes grow significantly.
+- **No database, no persistence** — `bob_sessions/` and `reports/` are placeholder directories. All state is ephemeral (Streamlit session). Any plan involving persistence needs to introduce a storage layer from scratch.
+- **26 error types are hard-coded** in `analyzer/detector.py`. Adding new types requires editing `detect_errors()` and the `ADVICE` dict in `analyzer/advice.py` in sync. There is no plugin or registry pattern.
