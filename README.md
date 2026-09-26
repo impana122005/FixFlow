@@ -74,7 +74,7 @@ Debugging is the most time-consuming part of software development. Developers of
 
 ### PDF Bug Report
 
-![PDF Report](assets/screenshots/04_pdf_report.png)
+![PDF Report](assets/screenshots/05_pdf_report.png)
 
 ---
 
