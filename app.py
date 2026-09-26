@@ -1,9 +1,11 @@
 """
 FixFlow – AI Bug-to-Fix Assistant
-Streamlit home page (Milestone 1 – UI scaffold only).
+Streamlit home page (Milestone 2 – rule-based error detection).
 """
 
 import streamlit as st
+
+from analyzer.parser import analyze_log, parse_uploaded_file
 
 # ── Page config ──────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -83,48 +85,89 @@ st.markdown('<hr class="divider">', unsafe_allow_html=True)
 # ── Upload Error Log ──────────────────────────────────────────────────────────
 st.markdown("### Upload Error Log")
 st.caption(
-    "Supported formats: plain text (`.txt`, `.log`), Python tracebacks, "
-    "JSON crash reports. Max 5 MB."
+    "Upload a `.txt` file **or** paste your error log below, then click **Analyze**."
 )
 
 uploaded_file = st.file_uploader(
-    label="Drop your error log here",
-    type=["txt", "log", "json"],
+    label="Drop your error log here (.txt)",
+    type=["txt"],
     accept_multiple_files=False,
-    help="Select a log file from your machine. Analysis will run automatically.",
+    help="Select a plain-text Python error log from your machine.",
 )
 
-if uploaded_file is not None:
-    st.info(
-        f"**{uploaded_file.name}** uploaded successfully "
-        f"({uploaded_file.size / 1024:.1f} KB). "
-        "Analysis coming in the next milestone! 🚀",
-        icon="📄",
-    )
-else:
-    st.markdown(
-        """
-        <div style="
-            border: 2px dashed #d1d5db;
-            border-radius: 10px;
-            padding: 2rem 1.5rem;
-            text-align: center;
-            color: #6b7280;
-            font-size: 0.9rem;
-            margin-top: 0.5rem;
-        ">
-            No file uploaded yet.<br>
-            <span style="font-size: 1.5rem;">📋</span><br>
-            Use the file picker above to get started.
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+# ── Paste / text area ─────────────────────────────────────────────────────────
+pasted_log = st.text_area(
+    label="Or paste your error log here",
+    placeholder="Traceback (most recent call last):\n  File \"main.py\", line 5, in <module>\nModuleNotFoundError: No module named 'pandas'",
+    height=180,
+)
+
+analyze_clicked = st.button("🔍 Analyze", type="primary", use_container_width=True)
 
 st.markdown('<hr class="divider">', unsafe_allow_html=True)
 
+# ── Analysis ──────────────────────────────────────────────────────────────────
+if analyze_clicked:
+    # Determine input source — file takes priority over text area
+    log_text = ""
+    source_label = ""
+
+    if uploaded_file is not None:
+        log_text = parse_uploaded_file(uploaded_file.read())
+        source_label = f"📄 **{uploaded_file.name}**"
+    elif pasted_log.strip():
+        log_text = pasted_log
+        source_label = "📋 **Pasted log**"
+
+    if not log_text.strip():
+        st.warning("Please upload a file or paste an error log before analyzing.", icon="⚠️")
+    else:
+        st.markdown("### 🔍 Analysis Results")
+        st.caption(f"Source: {source_label}")
+
+        results = analyze_log(log_text)
+
+        if not results:
+            st.success(
+                "No known Python errors detected in the provided log.",
+                icon="✅",
+            )
+        else:
+            st.error(
+                f"**{len(results)} error type{'s' if len(results) > 1 else ''} detected.**",
+                icon="🚨",
+            )
+
+            for err in results:
+                line_refs = (
+                    ", ".join(f"line {ln}" for ln in err.lines[:5])
+                    + (" …" if len(err.lines) > 5 else "")
+                )
+                with st.container():
+                    st.markdown(
+                        f"""
+                        <div style="
+                            background:#fff8f0;
+                            border-left:4px solid #f97316;
+                            border-radius:6px;
+                            padding:0.75rem 1rem;
+                            margin-bottom:0.75rem;
+                        ">
+                            <strong style="font-size:1rem;">{err.emoji} {err.name}</strong>
+                            <p style="margin:0.25rem 0 0.15rem;color:#374151;">{err.description}</p>
+                            <span style="font-size:0.8rem;color:#6b7280;">Found at: {line_refs}</span>
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
+                    )
+
+        # Show the raw log in an expander so it doesn't clutter the page
+        with st.expander("View raw log"):
+            st.code(log_text, language="python")
+
 # ── Footer ────────────────────────────────────────────────────────────────────
+st.markdown('<hr class="divider">', unsafe_allow_html=True)
 st.caption(
-    "FixFlow v0.1 · Built with ❤️ for IBM Bob 2.0 Hackathon · "
+    "FixFlow v0.2 · Built with ❤️ for IBM Bob 2.0 Hackathon · "
     "Powered by [IBM Bob](https://www.ibm.com)"
 )
