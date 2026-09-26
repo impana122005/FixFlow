@@ -51,15 +51,11 @@ Debugging is the most time-consuming part of software development. Developers of
 
 ### Home Page
 ```
-assets/screenshots/01_home.png
-```
 ![Home Page](assets/screenshots/01_home.png)
 
 ---
 
 ### Analysis Results — Error Card
-```
-assets/screenshots/02_error_card.png
 ```
 ![Error Card](assets/screenshots/02_error_card.png)
 
@@ -67,15 +63,11 @@ assets/screenshots/02_error_card.png
 
 ### Repository Context Match
 ```
-assets/screenshots/03_repo_context.png
-```
 ![Repository Context](assets/screenshots/03_repo_context.png)
 
 ---
 
 ### PDF Bug Report
-```
-assets/screenshots/04_pdf_report.png
 ```
 ![PDF Report](assets/screenshots/04_pdf_report.png)
 
