@@ -64,6 +64,7 @@ Debugging is the most time-consuming part of software development. Developers of
 ### Repository Context Match
 ```
 ![Repository Context](assets/screenshots/03_repo_context.png)
+
 ```
 ---
 
@@ -216,7 +217,7 @@ The `get_advice()` function in `analyzer/advice.py` is intentionally the **singl
 ## 👥 Team
 
 | Member | 
-|---|---|
+-
 | **Impana** | 
 | **Harshitha G** | 
 
