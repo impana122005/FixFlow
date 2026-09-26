@@ -2,10 +2,11 @@
 
 This file provides guidance to agents when working with code in this repository.
 
-## Non-Obvious Documentation Context
+## Documentation Context (Non-Obvious)
 
-- **FixFlow is a complete, working app** — all six milestones are implemented. The earlier `.bob/rules-ask/AGENTS.md` described the project as empty (inception phase); that is now outdated.
-- The "IBM Bob" in hackathon context refers to the IBM AI coding assistant platform, not a person. `analyzer/fixer.py` is the planned IBM Bob API integration point.
-- **`analyzer/advice.py`** contains the full static advice dictionary for 26 error types. The docstring on `get_advice()` explicitly marks it as the AI replacement point — the canonical reference for how fixes are structured.
-- **`reports/report_generator.py`** is the PDF generation module. `_SEVERITY_MAP` and `_generate_report_id()` are internal; `generate_pdf()` and `build_report_data()` are the public API.
-- There are no docs outside of `README.md` and the AGENTS.md files. The source code is the canonical reference.
+- **FixFlow is fully implemented** (not a skeleton) — `analyzer/`, `reports/`, and `app.py` are all working code. The old "project is at inception" notes are stale.
+- The only runtime dependencies are `streamlit` and `fpdf2` (see `requirements.txt`). No `requests`, no LLM SDK, no async queuing — IBM Bob integration (`analyzer/fixer.py`) is still a stub.
+- `bob_sessions/` contains Markdown milestone notes (`task01_*.md`), not session data files. These document the development history, not runtime state.
+- `reports/report_generator.py` uses fpdf2 with **built-in fonts only** (Helvetica, Courier) — no system font installation needed, which is why it works in any deploy environment.
+- The `analyzer/` modules (detector, advice, repo_context) have **zero Streamlit imports** by design — they are independently testable pure-Python. Only `app.py` and `reports/` touch Streamlit/fpdf.
+- `test_output.pdf` in the repo root is a sample output artefact from manual testing — not a test fixture.

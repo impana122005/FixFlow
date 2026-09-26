@@ -2,18 +2,13 @@
 
 This file provides guidance to agents when working with code in this repository.
 
-## Non-Obvious Coding Rules
+## Coding Rules (Non-Obvious)
 
-- **CSS-only approach**: All styling lives in a single `st.markdown(<style>)` block in `app.py`. Never create external CSS files. Always use `!important` on Streamlit data-testid selectors — without it, Streamlit's own styles win.
-- **CSS variable palette** (defined in `:root`): `--purple: #7c3aed`, `--purple-light: #a78bfa`, `--blue: #3b82f6`, `--bg-card`, `--bg-input`, `--border`, `--text-muted`, `--text-dim`, `--radius-md`, `--radius-sm`. Use these; hardcoding breaks theme consistency.
-- **`analyzer/` purity contract**: No module under `analyzer/` may import `streamlit` or do any file I/O. They return dataclasses only. Violating this breaks the AI-replacement pathway.
-- **`get_advice()` in `analyzer/advice.py`** is the single designated AI integration point — it currently returns from a static dict but is intended to be swapped for an IBM Bob API call.
-- **fpdf2 byte wrapping**: `pdf.output()` → `bytearray`, not `bytes`. Always do `bytes(pdf.output())` before passing to `st.download_button(data=...)`.
-- **`_safe()` in `report_generator.py`** must wrap all user-supplied text going into fpdf2 — it replaces non-latin-1 characters that crash core-font rendering.
-- **`set_page_config`** is at line 17 of `app.py` and must stay the very first Streamlit call. Never insert `st.*` calls above it.
-- Run `python -c "import ast; ast.parse(open('app.py', encoding='utf-8').read())"` to verify syntax after every edit to `app.py`.
-
-## Testing
-
-- No test suite exists yet — `pytest` is configured but there are no test files.
-- When adding tests, co-locate them with source (e.g. `analyzer/test_detector.py`) — do not create a separate `tests/` directory unless the project explicitly adopts one.
+- **`fpdf2` latin-1 constraint**: every string written to the PDF **must** pass through `_safe()` in `reports/report_generator.py`. Emojis, curly quotes, or any non-latin-1 character will crash `fpdf2` core fonts. Never add fpdf `multi_cell`/`cell` calls without `_safe()`.
+- **AI swap point**: `analyzer/advice.py::get_advice()` is explicitly designed to be replaced by an LLM call. Keep `ErrorAdvice` as the return type — `app.py` and `report_generator.py` both destructure its fields directly.
+- **Adding a new error type**: requires changes in two places — add to `_ERROR_CATALOGUE` in `analyzer/detector.py` **and** add a matching key in `ADVICE` dict in `analyzer/advice.py`. The `Exception` deduplication logic in `detect_errors()` must not be broken.
+- **Circular import guard**: `reports/report_generator.py::build_report_data()` takes `list` (not typed `list[DetectedError]`) to avoid importing from `analyzer/`. Keep it that way.
+- **No package-level exports**: `analyzer/__init__.py` is a comment stub. `app.py` imports directly from sub-modules (`from analyzer.parser import ...`, `from analyzer.detector import ...`). Do not add `__all__` or re-exports to `__init__.py` without updating all import sites.
+- **Session state for PDF**: `app.py` stores PDF bytes in `st.session_state["pdf_bytes"]` and gates rendering on `st.session_state["pdf_ready"]`. The download button section is **outside** the `if analyze_clicked:` block intentionally — it persists across reruns.
+- **uv preferred**: use `uv pip install` / `uv pip sync` over plain `pip` when possible. Add dependencies to `requirements.txt` only (no `pyproject.toml` exists yet).
+- **ruff covers everything**: do not add `black`, `isort`, or `flake8`. `ruff format` handles formatting; `ruff check` handles linting.

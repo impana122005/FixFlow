@@ -1,6 +1,6 @@
 """
 FixFlow – AI Bug-to-Fix Assistant
-Streamlit home page (Milestone 6 – confidence score, severity badge, fix time, sample errors, smart upload guidance).
+Streamlit home page (Milestone 7 – login gate, confidence score, severity badge, fix time, smart upload support)
 """
 
 import os
