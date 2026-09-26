@@ -11,6 +11,8 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
+from analyzer.advice import ErrorAdvice, get_advice
+
 # ── Error catalogue ───────────────────────────────────────────────────────────
 # Each entry: (error_name, emoji, short description)
 _ERROR_CATALOGUE: list[tuple[str, str, str]] = [
@@ -56,6 +58,8 @@ class DetectedError:
     description: str
     # Line numbers (1-based) where the error name appears
     lines: list[int] = field(default_factory=list)
+    # Advice fields — populated from analyzer.advice; None if no entry exists
+    advice: ErrorAdvice | None = field(default=None)
 
 
 def detect_errors(log_text: str) -> list[DetectedError]:
@@ -77,7 +81,12 @@ def detect_errors(log_text: str) -> list[DetectedError]:
         for name, pattern, emoji, desc in _PATTERNS:
             if pattern.search(line):
                 if name not in found:
-                    found[name] = DetectedError(name=name, emoji=emoji, description=desc)
+                    found[name] = DetectedError(
+                        name=name,
+                        emoji=emoji,
+                        description=desc,
+                        advice=get_advice(name),
+                    )
                 found[name].lines.append(lineno)
 
     results = list(found.values())

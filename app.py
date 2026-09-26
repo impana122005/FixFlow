@@ -1,6 +1,6 @@
 """
 FixFlow – AI Bug-to-Fix Assistant
-Streamlit home page (Milestone 2 – rule-based error detection).
+Streamlit home page (Milestone 3 – rule-based advice cards).
 """
 
 import streamlit as st
@@ -143,23 +143,60 @@ if analyze_clicked:
                     ", ".join(f"line {ln}" for ln in err.lines[:5])
                     + (" …" if len(err.lines) > 5 else "")
                 )
-                with st.container():
-                    st.markdown(
-                        f"""
-                        <div style="
-                            background:#fff8f0;
-                            border-left:4px solid #f97316;
-                            border-radius:6px;
-                            padding:0.75rem 1rem;
-                            margin-bottom:0.75rem;
-                        ">
-                            <strong style="font-size:1rem;">{err.emoji} {err.name}</strong>
-                            <p style="margin:0.25rem 0 0.15rem;color:#374151;">{err.description}</p>
-                            <span style="font-size:0.8rem;color:#6b7280;">Found at: {line_refs}</span>
-                        </div>
-                        """,
-                        unsafe_allow_html=True,
-                    )
+                adv = err.advice
+
+                # ── Card header ───────────────────────────────────────────
+                st.markdown(
+                    f"""
+                    <div style="
+                        background:#fff8f0;
+                        border-left:4px solid #f97316;
+                        border-radius:8px;
+                        padding:0.9rem 1.1rem 0.5rem;
+                        margin-bottom:0.25rem;
+                    ">
+                        <span style="font-size:1.1rem;font-weight:700;">{err.emoji} {err.name}</span>
+                        &nbsp;<span style="font-size:0.78rem;color:#6b7280;">Found at: {line_refs}</span>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
+                with st.expander("View details", expanded=True):
+                    if adv:
+                        # Explanation
+                        st.markdown("**What does this mean?**")
+                        st.markdown(adv.explanation)
+
+                        # Root cause
+                        st.markdown("**Most likely root cause**")
+                        st.markdown(
+                            f"""
+                            <div style="
+                                background:#fef9c3;
+                                border-left:3px solid #ca8a04;
+                                border-radius:4px;
+                                padding:0.5rem 0.75rem;
+                                margin-bottom:0.5rem;
+                                color:#374151;
+                            ">{adv.root_cause}</div>
+                            """,
+                            unsafe_allow_html=True,
+                        )
+
+                        # Fix steps
+                        st.markdown("**Step-by-step fix**")
+                        for i, step in enumerate(adv.steps, start=1):
+                            st.markdown(f"{i}. {step}")
+
+                        # Example fix
+                        st.markdown("**Example fix**")
+                        st.code(adv.example_fix, language="python")
+
+                    else:
+                        st.caption(err.description)
+
+                st.markdown("&nbsp;", unsafe_allow_html=True)
 
         # Show the raw log in an expander so it doesn't clutter the page
         with st.expander("View raw log"):
@@ -168,6 +205,6 @@ if analyze_clicked:
 # ── Footer ────────────────────────────────────────────────────────────────────
 st.markdown('<hr class="divider">', unsafe_allow_html=True)
 st.caption(
-    "FixFlow v0.2 · Built with ❤️ for IBM Bob 2.0 Hackathon · "
+    "FixFlow v0.3 · Built with ❤️ for IBM Bob 2.0 Hackathon · "
     "Powered by [IBM Bob](https://www.ibm.com)"
 )
